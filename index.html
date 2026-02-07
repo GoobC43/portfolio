@@ -760,7 +760,8 @@
                 .slider-wrapper {
                   position: relative;
                   width: 100vw;
-                  height: 100vh;
+                  height: 100vh; /* Fallback */
+                  height: 100dvh; /* Mobile browser fix */
                   overflow: hidden;
                   background: #0a0a0a;
                   opacity: 0;
@@ -1338,7 +1339,7 @@
                   .hero-content { 
                     left: 16px; 
                     right: 16px; 
-                    bottom: calc(100px + env(safe-area-inset-bottom));
+                    bottom: calc(160px + env(safe-area-inset-bottom));
                   }
                   .hero-title { 
                     font-size: clamp(2rem, 10vw, 3rem); 
@@ -1358,7 +1359,7 @@
                   
                   /* Navigation */
                   .sections-navigation { 
-                    bottom: calc(20px + env(safe-area-inset-bottom)); 
+                    bottom: calc(40px + env(safe-area-inset-bottom)); 
                     left: 16px; 
                     right: 16px;
                     gap: 12px;

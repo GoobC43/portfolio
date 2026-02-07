@@ -535,7 +535,8 @@ export function Component() {
         .slider-wrapper {
           position: relative;
           width: 100vw;
-          height: 100vh;
+          height: 100vh; /* Fallback */
+          height: 100dvh; /* Mobile browser fix */
           overflow: hidden;
           background: #0a0a0a;
           opacity: 0;
@@ -1070,11 +1071,11 @@ export function Component() {
           .hero-content { 
             left: 24px; 
             right: 24px;
-            bottom: calc(100px + env(safe-area-inset-bottom)); 
+            bottom: calc(160px + env(safe-area-inset-bottom)); 
           }
           
           .sections-navigation { 
-            bottom: calc(20px + env(safe-area-inset-bottom)); 
+            bottom: calc(40px + env(safe-area-inset-bottom)); 
             right: 24px; 
             left: 24px;
             justify-content: center;
