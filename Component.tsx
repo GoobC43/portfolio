@@ -30,9 +30,9 @@ const projects = [
 
 
 const sections = [
-  { id: "photography", title: "Photography", subtitle: "Visual stories captured through the lens. Shot on Fujifilm and Canon.", cta: "View Gallery", media: "MP/Photography.jpg" },
-  { id: "projects", title: "Projects", subtitle: "Code, design, and creative experiments", cta: "See Work", media: "MP/Projects.jpg" },
-  { id: "about", title: "About Me", subtitle: "Photographer, developer, jack of all trades", cta: "Read More", media: "MP/About.jpg" },
+  { id: "photography", title: "Photography", subtitle: "Visual stories captured through the lens. Shot on Fujifilm and Canon.", cta: "View Gallery", media: "MP/Optimized/Photography.jpg" },
+  { id: "projects", title: "Projects", subtitle: "Code, design, and creative experiments", cta: "See Work", media: "MP/Optimized/Projects.jpg" },
+  { id: "about", title: "About Me", subtitle: "Photographer, developer, jack of all trades", cta: "Read More", media: "MP/Optimized/About.jpg" },
 ];
 
 export function Component() {
@@ -1071,7 +1071,7 @@ export function Component() {
           .hero-content { 
             left: 24px; 
             right: 24px;
-            bottom: calc(160px + env(safe-area-inset-bottom)); 
+            bottom: calc(100px + env(safe-area-inset-bottom)); 
           }
           
           .sections-navigation { 
@@ -1170,18 +1170,32 @@ export function Component() {
                     </>
                   ) : (
                     <div className="pdf-viewer-container" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', padding: '20px' }}>
-                      <button
-                        className="cta-button"
-                        style={{ alignSelf: 'flex-start', marginBottom: '10px', padding: '8px 16px', fontSize: '0.8rem' }}
-                        onClick={() => setShowPdf(false)}
-                      >
-                        ← Back to Description
-                      </button>
-                      <iframe
-                        src={project.pdf}
-                        style={{ width: '100%', flex: 1, border: 'none', borderRadius: '8px', background: '#fff' }}
-                        title={`${project.title} PDF`}
-                      />
+                      <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', alignItems: 'center' }}>
+                        <button
+                          className="cta-button"
+                          style={{ padding: '8px 16px', fontSize: '0.8rem' }}
+                          onClick={() => setShowPdf(false)}
+                        >
+                          ← Back
+                        </button>
+                        <a
+                          href={project.pdf}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="cta-button"
+                          style={{ padding: '8px 16px', fontSize: '0.8rem', textDecoration: 'none' }}
+                        >
+                          Open in New Tab ↗
+                        </a>
+                      </div>
+                      <div style={{ flex: 1, position: 'relative', width: '100%', overflow: 'hidden', borderRadius: '8px', background: '#333' }}>
+                        <iframe
+                          src={project.pdf}
+                          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+                          title={`${project.title} PDF`}
+                          loading="lazy"
+                        />
+                      </div>
                     </div>
                   )}
                 </>
