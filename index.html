@@ -560,8 +560,9 @@
 
         loadScripts();
 
-        // OPTIMIZATION: Pre-cache ALL gallery aspect ratios in background during idle time
-        const idleCallback = () => {
+        // OPTIMIZATION: Start loading ALL gallery thumbnails immediately for faster aspect ratio caching
+        // Use a small delay to not compete with critical resources, but don't wait for idle
+        setTimeout(() => {
           shuffledGalleryImages.forEach(img => {
             if (!(img.id in aspectRatioCache)) {
               const image = new Image();
@@ -571,12 +572,7 @@
               };
             }
           });
-        };
-        if ('requestIdleCallback' in window) {
-          window.requestIdleCallback(idleCallback, { timeout: 3000 });
-        } else {
-          setTimeout(idleCallback, 1500);
-        }
+        }, 500); // Start after 500ms - enough time for critical resources to begin loading
 
         return () => { };
       }, []);
