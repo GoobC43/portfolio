@@ -446,10 +446,19 @@ export function Component() {
                 onClick={() => setLightboxImage(img.src)}
               >
                 <img src={img.thumb} alt={img.caption} loading="lazy" />
-                <div className="gallery-caption">{img.caption}</div>
               </div>
             ))}
           </div>
+
+          {/* Back to Top Button */}
+          <button
+            className="scroll-top-btn"
+            onClick={() => {
+              if (overlayRef.current) overlayRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          >
+            ↑ Back to Top
+          </button>
         </div>
       );
     }
