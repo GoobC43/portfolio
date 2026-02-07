@@ -560,9 +560,9 @@
 
         loadScripts();
 
-        // OPTIMIZATION: Pre-cache gallery aspect ratios in background during idle time
+        // OPTIMIZATION: Pre-cache ALL gallery aspect ratios in background during idle time
         const idleCallback = () => {
-          shuffledGalleryImages.slice(0, 20).forEach(img => {
+          shuffledGalleryImages.forEach(img => {
             if (!(img.id in aspectRatioCache)) {
               const image = new Image();
               image.src = img.thumb;
@@ -626,99 +626,85 @@
           .sort((a, b) => a.sortOrder - b.sortOrder);
       }, [galleryFilter]);
 
-      /* --- MASONRY LAYOUT LOGIC (OPTIMIZED) --- */
+      /* --- GALLERY LAYOUT (NON-BLOCKING) --- */
       const [imageLayouts, setImageLayouts] = useState({});
-      const lastColCount = React.useRef(0); // Track column count to skip unnecessary recalcs
 
+      // Calculate layouts immediately using cached aspect ratios or defaults
       useEffect(() => {
-        let debounceTimer = null;
+        if (expandedView !== "photography" || filteredImages.length === 0) return;
 
-        const calculateLayout = async () => {
-          const width = window.innerWidth;
-          const cols = width <= 768 ? 1 : width <= 1024 ? 2 : 3;
+        const width = window.innerWidth;
+        const cols = width <= 768 ? 1 : width <= 1024 ? 2 : 3;
+        const containerPad = width <= 768 ? 40 : 80;
+        const totalGap = (cols - 1) * 20;
+        const colWidth = (Math.min(width, width * 0.95) - containerPad - totalGap) / cols;
 
-          // OPTIMIZATION: Skip if column count hasn't changed and we have layouts
-          if (cols === lastColCount.current && Object.keys(imageLayouts).length > 0) {
-            return;
+        // Calculate layouts IMMEDIATELY using cached ratios or default (1 = square)
+        const layouts = {};
+        filteredImages.forEach(img => {
+          const aspectRatio = aspectRatioCache[img.id] || 1; // Default to square
+          let gridCol = 1;
+          if (aspectRatio > 1.2 && cols > 1) gridCol = 2;
+
+          const displayWidth = colWidth * gridCol + (gridCol > 1 ? 20 : 0);
+          const displayHeight = displayWidth / aspectRatio;
+          const rowHeight = 10;
+          const gap = 20;
+          const gridRow = Math.ceil((displayHeight + gap) / (rowHeight + gap));
+
+          layouts[img.id] = { gridCol, gridRow };
+        });
+
+        setImageLayouts(layouts);
+
+        // Trigger entry animation after a tiny delay for DOM to update
+        requestAnimationFrame(() => {
+          const grid = document.querySelector('.gallery-grid');
+          if (grid && grid.children.length > 0) {
+            grid.classList.add('loaded');
+            gsap.fromTo(grid.children,
+              { y: 20, opacity: 0 },
+              { y: 0, opacity: 1, duration: 0.25, stagger: 0.01, ease: "power2.out", overwrite: true }
+            );
           }
-          lastColCount.current = cols;
+        });
 
-          const containerPad = width <= 768 ? 40 : 80;
-          const totalGap = (cols - 1) * 20;
-          const colWidth = (Math.min(width, width * 0.95) - containerPad - totalGap) / cols;
+        // Background: cache aspect ratios for uncached images and recalculate layouts when done
+        let pendingCaches = 0;
+        let completedCaches = 0;
+        const uncachedImages = filteredImages.filter(img => !(img.id in aspectRatioCache));
+        pendingCaches = uncachedImages.length;
 
-          const layouts = {};
-
-          // OPTIMIZATION: Only load images not already in global cache
-          const uncachedImages = filteredImages.filter(img => !(img.id in aspectRatioCache));
-
-          if (uncachedImages.length > 0) {
-            await Promise.all(uncachedImages.map(img => {
-              return new Promise((resolve) => {
-                const image = new Image();
-                image.src = img.thumb;
-                image.onload = () => {
-                  aspectRatioCache[img.id] = image.naturalWidth / image.naturalHeight;
-                  resolve();
-                };
-                image.onerror = () => {
-                  aspectRatioCache[img.id] = 1; // Fallback to square
-                  resolve();
-                };
-              });
-            }));
-          }
-
-          // Calculate layouts using cached aspect ratios
-          filteredImages.forEach(img => {
-            const aspectRatio = aspectRatioCache[img.id] || 1;
-            let gridCol = 1;
-            if (aspectRatio > 1.2 && cols > 1) gridCol = 2;
-
-            const displayWidth = colWidth * gridCol + (gridCol > 1 ? 20 : 0);
-            const displayHeight = displayWidth / aspectRatio;
-            const rowHeight = 10;
-            const gap = 20;
-            const gridRow = Math.ceil((displayHeight + gap) / (rowHeight + gap));
-
-            layouts[img.id] = { gridCol, gridRow };
+        if (pendingCaches > 0) {
+          uncachedImages.forEach(img => {
+            const image = new Image();
+            image.src = img.thumb;
+            image.onload = () => {
+              aspectRatioCache[img.id] = image.naturalWidth / image.naturalHeight;
+              completedCaches++;
+              // When all images are cached, recalculate layouts
+              if (completedCaches === pendingCaches) {
+                const newLayouts = {};
+                filteredImages.forEach(i => {
+                  const ar = aspectRatioCache[i.id] || 1;
+                  let gc = 1;
+                  if (ar > 1.2 && cols > 1) gc = 2;
+                  const dw = colWidth * gc + (gc > 1 ? 20 : 0);
+                  const dh = dw / ar;
+                  const gr = Math.ceil((dh + 20) / 30);
+                  newLayouts[i.id] = { gridCol: gc, gridRow: gr };
+                });
+                setImageLayouts(newLayouts);
+              }
+            };
+            image.onerror = () => {
+              aspectRatioCache[img.id] = 1;
+              completedCaches++;
+            };
           });
-
-          setImageLayouts(layouts);
-
-          // Trigger animation
-          if (overlayRef.current) {
-            const grid = overlayRef.current.querySelector('.gallery-grid');
-            if (grid) {
-              grid.classList.add('loaded');
-              // OPTIMIZATION: Faster animation - reduced stagger delay
-              gsap.fromTo(grid.children,
-                { y: 30, opacity: 0 },
-                { y: 0, opacity: 1, duration: 0.3, stagger: 0.02, ease: "power2.out", overwrite: true }
-              );
-            }
-          }
-        };
-
-        // OPTIMIZATION: Debounced resize handler
-        const handleResize = () => {
-          clearTimeout(debounceTimer);
-          debounceTimer = setTimeout(() => {
-            lastColCount.current = 0; // Force recalculation
-            calculateLayout();
-          }, 150);
-        };
-        window.addEventListener('resize', handleResize);
-
-        if (expandedView === "photography" && filteredImages.length > 0) {
-          calculateLayout();
         }
 
-        return () => {
-          window.removeEventListener('resize', handleResize);
-          clearTimeout(debounceTimer);
-        };
-      }, [filteredImages, expandedView]);
+      }, [expandedView, galleryFilter]); // Re-run when view opens or filter changes
 
 
       const renderExpandedContent = () => {
