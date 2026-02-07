@@ -86,6 +86,9 @@
     // Static shuffle once on load - stable across re-renders
     const shuffledGalleryImages = shuffleArray(galleryImages);
 
+    // OPTIMIZATION: Global aspect ratio cache - populated during idle time, used by gallery layout
+    const aspectRatioCache = {};
+
 
     const projects = [
       { id: 1, title: "TEDx", desc: "Founded and led the school’s TEDx chapter at Shanghai American School Pudong, managing a 6-member team. Directed event logistics, speaker curation, and marketing to secure funding and approvals. Currently working as a finance intern at TedX University of Toronto.", tech: ["Leadership", "Event Planning", "Marketing", "Logistics"], thumb: "Projects/Thumbnails/TedX.JPG", image: "Projects/Optimized/TedX.JPG" },
@@ -556,6 +559,25 @@
         };
 
         loadScripts();
+
+        // OPTIMIZATION: Pre-cache gallery aspect ratios in background during idle time
+        const idleCallback = () => {
+          shuffledGalleryImages.slice(0, 20).forEach(img => {
+            if (!(img.id in aspectRatioCache)) {
+              const image = new Image();
+              image.src = img.thumb;
+              image.onload = () => {
+                aspectRatioCache[img.id] = image.naturalWidth / image.naturalHeight;
+              };
+            }
+          });
+        };
+        if ('requestIdleCallback' in window) {
+          window.requestIdleCallback(idleCallback, { timeout: 3000 });
+        } else {
+          setTimeout(idleCallback, 1500);
+        }
+
         return () => { };
       }, []);
 
@@ -606,7 +628,6 @@
 
       /* --- MASONRY LAYOUT LOGIC (OPTIMIZED) --- */
       const [imageLayouts, setImageLayouts] = useState({});
-      const aspectRatioCache = React.useRef({}); // Cache aspect ratios to avoid reloading images
       const lastColCount = React.useRef(0); // Track column count to skip unnecessary recalcs
 
       useEffect(() => {
@@ -627,10 +648,9 @@
           const colWidth = (Math.min(width, width * 0.95) - containerPad - totalGap) / cols;
 
           const layouts = {};
-          const cache = aspectRatioCache.current;
 
-          // OPTIMIZATION: Only load images not in cache
-          const uncachedImages = filteredImages.filter(img => !(img.id in cache));
+          // OPTIMIZATION: Only load images not already in global cache
+          const uncachedImages = filteredImages.filter(img => !(img.id in aspectRatioCache));
 
           if (uncachedImages.length > 0) {
             await Promise.all(uncachedImages.map(img => {
@@ -638,11 +658,11 @@
                 const image = new Image();
                 image.src = img.thumb;
                 image.onload = () => {
-                  cache[img.id] = image.naturalWidth / image.naturalHeight;
+                  aspectRatioCache[img.id] = image.naturalWidth / image.naturalHeight;
                   resolve();
                 };
                 image.onerror = () => {
-                  cache[img.id] = 1; // Fallback to square
+                  aspectRatioCache[img.id] = 1; // Fallback to square
                   resolve();
                 };
               });
@@ -651,7 +671,7 @@
 
           // Calculate layouts using cached aspect ratios
           filteredImages.forEach(img => {
-            const aspectRatio = cache[img.id] || 1;
+            const aspectRatio = aspectRatioCache[img.id] || 1;
             let gridCol = 1;
             if (aspectRatio > 1.2 && cols > 1) gridCol = 2;
 
@@ -748,8 +768,9 @@
               <button
                 className="scroll-top-btn"
                 onClick={() => {
-                  const overlay = document.querySelector('.overlay-content');
-                  if (overlay) overlay.scrollTo({ top: 0, behavior: 'smooth' });
+                  if (overlayRef.current) {
+                    overlayRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+                  }
                 }}
               >
                 ↑ Back to Top
