@@ -19,20 +19,20 @@ const galleryImages = (() => {
 })();
 
 const projects = [
-  { id: 1, title: "TEDx", desc: "Founded and led the school’s TEDx chapter at Shanghai American School Pudong, managing a 6-member team. Directed event logistics, speaker curation, and marketing to secure funding and approvals. Currently working as a finance intern at TedX University of Toronto.", tech: ["Leadership", "Event Planning", "Marketing", "Logistics"], thumb: "Projects/TedX.JPG" },
-  { id: 2, title: "Stress Zero (wIN)", desc: "Managed finances and initiated collaborations with non-profits. Expanded mental health advocacy to schools in Korea, China, US, and Japan, raising over 80,000 CNY.", tech: ["Finance", "Global Outreach", "Charity", "Mental Health"], thumb: "Projects/StressZero.jpg" },
-  { id: 3, title: "START STEM & Art Gallery", desc: "Co-led an annual gallery promoting the interplay between STEM and Art. Directed visual design, managed logistics, and created promotional materials.", tech: ["STEM", "Art", "Visual Design", "Management"], thumb: "Projects/START.jpg" },
-  { id: 4, title: "Rolling Shutter Analysis", desc: "Built a mathematical framework using algebra and parametric equations to model rolling shutter distortions in photography. Verified accuracy through data collection and analysis.", tech: ["Mathematics", "Data Analysis", "GeoGebra", "Modeling"], thumb: "Projects/RollingShutter.jpg", pdf: "Projects/Files/Camera.pdf" },
-  { id: 5, title: "Polar Filters Analysis", desc: "Designed a custom polarimetry experiment to measure chiral optical rotation. Analyzed data sets with regression models to compare with literature values.", tech: ["Quantum Optics", "Physics", "Data Analysis", "Regression Models"], thumb: "Projects/Polar.jpg", pdf: "Projects/Files/Polar.pdf" },
-  { id: 6, title: "Linear Algebra Textbook", desc: "Currently writing a comprehensive guide exploring vector spaces, linear transformations, and ultimatly Jordan Canonical Forms. Written for MAT224 at The University of Toronto.", tech: ["Mathematics", "Linear Algebra", "LaTeX", "Education"], thumb: "Projects/LinearAlg.jpg", pdf: "Projects/Files/MAT224_LEC_NOTES.pdf" },
+  { id: 1, title: "TEDx", desc: "Founded and led the school’s TEDx chapter at Shanghai American School Pudong, managing a 6-member team. Directed event logistics, speaker curation, and marketing to secure funding and approvals. Currently working as a finance intern at TedX University of Toronto.", tech: ["Leadership", "Event Planning", "Marketing", "Logistics"], thumb: "Projects/Thumbnails/TedX.JPG", image: "Projects/Optimized/TedX.JPG" },
+  { id: 2, title: "Stress Zero (wIN)", desc: "Managed finances and initiated collaborations with non-profits. Expanded mental health advocacy to schools in Korea, China, US, and Japan, raising over 80,000 CNY.", tech: ["Finance", "Global Outreach", "Charity", "Mental Health"], thumb: "Projects/Thumbnails/StressZero.jpg", image: "Projects/Optimized/StressZero.jpg" },
+  { id: 3, title: "START STEM & Art Gallery", desc: "Co-led an annual gallery promoting the interplay between STEM and Art. Directed visual design, managed logistics, and created promotional materials.", tech: ["STEM", "Art", "Visual Design", "Management"], thumb: "Projects/Thumbnails/START.jpg", image: "Projects/Optimized/START.jpg" },
+  { id: 4, title: "Rolling Shutter Analysis", desc: "Built a mathematical framework using algebra and parametric equations to model rolling shutter distortions in photography. Verified accuracy through data collection and analysis.", tech: ["Mathematics", "Data Analysis", "GeoGebra", "Modeling"], thumb: "Projects/Thumbnails/RollingShutter.jpg", image: "Projects/Optimized/RollingShutter.jpg", pdf: "Projects/Files/Camera.pdf" },
+  { id: 5, title: "Polar Filters Analysis", desc: "Designed a custom polarimetry experiment to measure chiral optical rotation. Analyzed data sets with regression models to compare with literature values.", tech: ["Quantum Optics", "Physics", "Data Analysis", "Regression Models"], thumb: "Projects/Thumbnails/Polar.jpg", image: "Projects/Optimized/Polar.jpg", pdf: "Projects/Files/Polar.pdf" },
+  { id: 6, title: "Linear Algebra Textbook", desc: "Currently writing a comprehensive guide exploring vector spaces, linear transformations, and ultimatly Jordan Canonical Forms. Written for MAT224 at The University of Toronto.", tech: ["Mathematics", "Linear Algebra", "LaTeX", "Education"], thumb: "Projects/Thumbnails/LinearAlg.jpg", image: "Projects/Optimized/LinearAlg.jpg", pdf: "Projects/Files/MAT224_LEC_NOTES.pdf" },
 ];
 
 
 
 const sections = [
-  { id: "photography", title: "Photography", subtitle: "Visual stories captured through the lens. Shot on Fujifilm and Canon.", cta: "View Gallery", media: "MP/Photography.jpg" },
-  { id: "projects", title: "Projects", subtitle: "Code, design, and creative experiments", cta: "See Work", media: "MP/Projects.jpg" },
-  { id: "about", title: "About Me", subtitle: "Photographer, developer, jack of all trades", cta: "Read More", media: "MP/About.jpg" },
+  { id: "photography", title: "Photography", subtitle: "Visual stories captured through the lens. Shot on Fujifilm and Canon.", cta: "View Gallery", media: "MP/Photography.jpg", thumb: "MP/Optimized/Photography.jpg" },
+  { id: "projects", title: "Projects", subtitle: "Code, design, and creative experiments", cta: "See Work", media: "MP/Projects.jpg", thumb: "MP/Optimized/Projects.jpg" },
+  { id: "about", title: "About Me", subtitle: "Photographer, developer, jack of all trades", cta: "Read More", media: "MP/About.jpg", thumb: "MP/Optimized/About.jpg" },
 ];
 
 export function Component() {
@@ -488,7 +488,7 @@ export function Component() {
           <button className="close-btn" onClick={closeExpandedView}>✕ Close</button>
           <div className="about-layout">
             <div className="about-portrait animate-item">
-              <img src="about_pic.jpg" alt="Seohyun Cho" />
+              <img src="about_pic_optimized.jpg" alt="Seohyun Cho" loading="lazy" />
             </div>
             <div className="about-content">
               <section className="bio-section animate-item">
@@ -1159,7 +1159,7 @@ export function Component() {
                 <>
                   {(!showPdf || !project.pdf) ? (
                     <>
-                      <img className="modal-image" src={project.thumb} alt={project.title} />
+                      <img className="modal-image" src={project.image || project.thumb} alt={project.title} />
                       <div className="modal-body">
                         <h2>{project.title}</h2>
                         <p>{project.desc}</p>
