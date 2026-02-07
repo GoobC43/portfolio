@@ -30,6 +30,13 @@
   <!-- Performance Hints -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://unpkg.com">
+
+  <!-- Preload Critical Resources -->
+  <link rel="preload" href="MP/Optimized/Photography.jpg" as="image">
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" as="script">
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" as="script">
 
   <!-- Mobile Theme -->
   <meta name="theme-color" content="#0a0a0a">
@@ -215,8 +222,11 @@
           });
 
           try {
-            await loadScript('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js', 'gsap');
-            await loadScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js', 'THREE');
+            // OPTIMIZATION: Load scripts in parallel instead of sequentially
+            await Promise.all([
+              loadScript('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js', 'gsap'),
+              loadScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js', 'THREE')
+            ]);
             setScriptsLoaded(true);
           } catch (e) { console.error('Failed to load base scripts:', e); }
 
@@ -554,6 +564,24 @@
         setExpandedView(hash);
       };
 
+      // OPTIMIZATION: Prefetch gallery thumbnails when user shows intent to open gallery
+      const prefetchGallery = React.useRef(false);
+      const handleCtaHover = () => {
+        if (prefetchGallery.current) return;
+        const hash = window.location.hash.slice(1) || sections[0].id;
+        if (hash === "photography") {
+          prefetchGallery.current = true;
+          // Prefetch first 8 thumbnails
+          shuffledGalleryImages.slice(0, 8).forEach(img => {
+            const link = document.createElement('link');
+            link.rel = 'prefetch';
+            link.href = img.thumb;
+            link.as = 'image';
+            document.head.appendChild(link);
+          });
+        }
+      };
+
       const closeExpandedView = () => {
         if (scriptsLoaded && overlayRef.current) {
           gsap.to(overlayRef.current, {
@@ -576,58 +604,69 @@
           .sort((a, b) => a.sortOrder - b.sortOrder);
       }, [galleryFilter]);
 
-      /* --- MASONRY LAYOUT LOGIC --- */
+      /* --- MASONRY LAYOUT LOGIC (OPTIMIZED) --- */
       const [imageLayouts, setImageLayouts] = useState({});
+      const aspectRatioCache = React.useRef({}); // Cache aspect ratios to avoid reloading images
+      const lastColCount = React.useRef(0); // Track column count to skip unnecessary recalcs
 
       useEffect(() => {
+        let debounceTimer = null;
+
         const calculateLayout = async () => {
           const width = window.innerWidth;
-          // Determine columns based on breakpoints
           const cols = width <= 768 ? 1 : width <= 1024 ? 2 : 3;
 
-          // Approximate column width calculation (container padding + gaps)
-          // Desktop: 80px pad, 20px gaps. Mobile: 40px pad.
+          // OPTIMIZATION: Skip if column count hasn't changed and we have layouts
+          if (cols === lastColCount.current && Object.keys(imageLayouts).length > 0) {
+            return;
+          }
+          lastColCount.current = cols;
+
           const containerPad = width <= 768 ? 40 : 80;
           const totalGap = (cols - 1) * 20;
           const colWidth = (Math.min(width, width * 0.95) - containerPad - totalGap) / cols;
 
           const layouts = {};
-          const imagePromises = filteredImages.map(img => {
-            return new Promise((resolve) => {
-              const image = new Image();
-              image.src = img.thumb;
-              image.onload = () => {
-                const aspectRatio = image.naturalWidth / image.naturalHeight;
-                let gridCol = 1;
+          const cache = aspectRatioCache.current;
 
-                // Logic: Landscape span 2 cols on Desktop/Tablet if ratio > 1.2
-                if (aspectRatio > 1.2 && cols > 1) {
-                  gridCol = 2;
-                }
+          // OPTIMIZATION: Only load images not in cache
+          const uncachedImages = filteredImages.filter(img => !(img.id in cache));
 
-                const displayWidth = colWidth * gridCol + (gridCol > 1 ? 20 : 0);
-                const displayHeight = displayWidth / aspectRatio;
+          if (uncachedImages.length > 0) {
+            await Promise.all(uncachedImages.map(img => {
+              return new Promise((resolve) => {
+                const image = new Image();
+                image.src = img.thumb;
+                image.onload = () => {
+                  cache[img.id] = image.naturalWidth / image.naturalHeight;
+                  resolve();
+                };
+                image.onerror = () => {
+                  cache[img.id] = 1; // Fallback to square
+                  resolve();
+                };
+              });
+            }));
+          }
 
-                // Fix: Account for row-gap (20px) in span calculation
-                // span = (Height + gap) / (rowHeight + gap)
-                const rowHeight = 10;
-                const gap = 20;
-                const gridRow = Math.ceil((displayHeight + gap) / (rowHeight + gap));
+          // Calculate layouts using cached aspect ratios
+          filteredImages.forEach(img => {
+            const aspectRatio = cache[img.id] || 1;
+            let gridCol = 1;
+            if (aspectRatio > 1.2 && cols > 1) gridCol = 2;
 
-                layouts[img.id] = { gridCol, gridRow };
-                resolve();
-              };
-              image.onerror = () => { // Fallback standard square
-                layouts[img.id] = { gridCol: 1, gridRow: Math.ceil(colWidth / 10) };
-                resolve();
-              }
-            });
+            const displayWidth = colWidth * gridCol + (gridCol > 1 ? 20 : 0);
+            const displayHeight = displayWidth / aspectRatio;
+            const rowHeight = 10;
+            const gap = 20;
+            const gridRow = Math.ceil((displayHeight + gap) / (rowHeight + gap));
+
+            layouts[img.id] = { gridCol, gridRow };
           });
 
-          await Promise.all(imagePromises);
           setImageLayouts(layouts);
 
-          // Trigger reflow animation
+          // Trigger animation
           if (overlayRef.current) {
             const grid = overlayRef.current.querySelector('.gallery-grid');
             if (grid) {
@@ -640,16 +679,24 @@
           }
         };
 
-        // Debounce simple resize handler
-        const handleResize = () => calculateLayout();
+        // OPTIMIZATION: Debounced resize handler
+        const handleResize = () => {
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            lastColCount.current = 0; // Force recalculation
+            calculateLayout();
+          }, 150);
+        };
         window.addEventListener('resize', handleResize);
 
-        // Run calculation when images change or view opens
         if (expandedView === "photography" && filteredImages.length > 0) {
           calculateLayout();
         }
 
-        return () => window.removeEventListener('resize', handleResize);
+        return () => {
+          window.removeEventListener('resize', handleResize);
+          clearTimeout(debounceTimer);
+        };
       }, [filteredImages, expandedView]);
 
 
@@ -1524,7 +1571,7 @@
             <div className="hero-content">
               <h1 className="hero-title" id="mainTitle"></h1>
               <p className="hero-subtitle" id="mainSubtitle"></p>
-              <button className="cta-button" id="mainCta" onClick={handleCtaClick}></button>
+              <button className="cta-button" id="mainCta" onClick={handleCtaClick} onMouseEnter={handleCtaHover}></button>
             </div>
 
             <nav className="sections-navigation" id="sectionsNav"></nav>
