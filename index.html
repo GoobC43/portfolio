@@ -1338,7 +1338,7 @@
                   .hero-content { 
                     left: 16px; 
                     right: 16px; 
-                    bottom: 120px;
+                    bottom: calc(100px + env(safe-area-inset-bottom));
                   }
                   .hero-title { 
                     font-size: clamp(2rem, 10vw, 3rem); 
@@ -1358,10 +1358,11 @@
                   
                   /* Navigation */
                   .sections-navigation { 
-                    bottom: 16px; 
+                    bottom: calc(20px + env(safe-area-inset-bottom)); 
                     left: 16px; 
                     right: 16px;
                     gap: 12px;
+                    padding-bottom: env(safe-area-inset-bottom);
                   }
                   .section-progress-line { width: 50px; }
                   .section-nav-title { font-size: 0.6rem; letter-spacing: 0.1em; }

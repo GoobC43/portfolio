@@ -1070,14 +1070,15 @@ export function Component() {
           .hero-content { 
             left: 24px; 
             right: 24px;
-            bottom: 140px; 
+            bottom: calc(100px + env(safe-area-inset-bottom)); 
           }
           
           .sections-navigation { 
-            bottom: 24px; 
+            bottom: calc(20px + env(safe-area-inset-bottom)); 
             right: 24px; 
             left: 24px;
             justify-content: center;
+            padding-bottom: env(safe-area-inset-bottom);
           }
           
           .overlay-content {
