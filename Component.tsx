@@ -30,9 +30,9 @@ const projects = [
 
 
 const sections = [
-  { id: "photography", title: "Photography", subtitle: "Visual stories captured through the lens. Shot on Fujifilm and Canon.", cta: "View Gallery", media: "MP/Optimized/Photography.jpg" },
-  { id: "projects", title: "Projects", subtitle: "Code, design, and creative experiments", cta: "See Work", media: "MP/Optimized/Projects.jpg" },
-  { id: "about", title: "About Me", subtitle: "Photographer, developer, jack of all trades", cta: "Read More", media: "MP/Optimized/About.jpg" },
+  { id: "photography", title: "Photography", subtitle: "Visual stories captured through the lens. Shot on Fujifilm and Canon.", cta: "View Gallery", media: "MP/Photography.jpg" },
+  { id: "projects", title: "Projects", subtitle: "Code, design, and creative experiments", cta: "See Work", media: "MP/Projects.jpg" },
+  { id: "about", title: "About Me", subtitle: "Photographer, developer, jack of all trades", cta: "Read More", media: "MP/About.jpg" },
 ];
 
 export function Component() {
