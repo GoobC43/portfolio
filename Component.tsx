@@ -1110,6 +1110,15 @@ export function Component() {
           }
           .social-link:last-child { margin-bottom: 0; }
         }
+          /* PDF Responsive */
+          @media (max-width: 768px) {
+            .desktop-pdf-view { display: none !important; }
+            .mobile-pdf-view { display: flex !important; }
+            .pdf-nav-header { 
+              padding-top: 40px; 
+              justify-content: center;
+            }
+          }
       `}</style>
 
       <main className="slider-wrapper" ref={containerRef}>
@@ -1170,7 +1179,7 @@ export function Component() {
                     </>
                   ) : (
                     <div className="pdf-viewer-container" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', padding: '20px' }}>
-                      <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', alignItems: 'center' }}>
+                      <div className="pdf-nav-header" style={{ display: 'flex', gap: '10px', marginBottom: '10px', alignItems: 'center', marginTop: '10px', flexWrap: 'wrap' }}>
                         <button
                           className="cta-button"
                           style={{ padding: '8px 16px', fontSize: '0.8rem' }}
@@ -1188,14 +1197,34 @@ export function Component() {
                           Open in New Tab ↗
                         </a>
                       </div>
-                      <div style={{ flex: 1, position: 'relative', width: '100%', overflow: 'hidden', borderRadius: '8px', background: '#333' }}>
+
+                      {/* Desktop View: Embed */}
+                      <div className="desktop-pdf-view" style={{ flex: 1, position: 'relative', width: '100%', overflow: 'hidden', borderRadius: '8px', background: '#333' }}>
                         <iframe
                           src={project.pdf}
                           style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
                           title={`${project.title} PDF`}
-                          loading="lazy"
                         />
                       </div>
+
+                      {/* Mobile View: Fallback Card */}
+                      <div className="mobile-pdf-view" style={{ display: 'none', flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                        <div style={{ fontSize: '3rem', marginBottom: '20px' }}>📄</div>
+                        <h3 style={{ color: '#fff', marginBottom: '10px' }}>View Full PDF</h3>
+                        <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '20px', maxWidth: '300px' }}>
+                          For the best reading experience on mobile, please open the document in a new tab.
+                        </p>
+                        <a
+                          href={project.pdf}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="cta-button"
+                          style={{ padding: '12px 24px', fontSize: '1rem', textDecoration: 'none' }}
+                        >
+                          Open PDF ↗
+                        </a>
+                      </div>
+
                     </div>
                   )}
                 </>
