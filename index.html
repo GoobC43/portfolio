@@ -691,9 +691,10 @@
             const grid = overlayRef.current.querySelector('.gallery-grid');
             if (grid) {
               grid.classList.add('loaded');
+              // OPTIMIZATION: Faster animation - reduced stagger delay
               gsap.fromTo(grid.children,
-                { y: 50, opacity: 0, scale: 0.9 },
-                { y: 0, opacity: 1, scale: 1, duration: 0.5, stagger: 0.05, ease: "power2.out", overwrite: true }
+                { y: 30, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.3, stagger: 0.02, ease: "power2.out", overwrite: true }
               );
             }
           }
@@ -767,9 +768,11 @@
               {/* Back to Top Button */}
               <button
                 className="scroll-top-btn"
-                onClick={() => {
-                  if (overlayRef.current) {
-                    overlayRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+                onClick={(e) => {
+                  // The scrollable element is .section-overlay (parent of .overlay-content)
+                  const scrollContainer = e.currentTarget.closest('.section-overlay');
+                  if (scrollContainer) {
+                    scrollContainer.scrollTop = 0;
                   }
                 }}
               >
