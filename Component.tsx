@@ -4,16 +4,19 @@ declare const gsap: any;
 declare const THREE: any;
 
 // --- DATA ---
-const galleryImages = [
-  { id: 1, src: "https://picsum.photos/seed/1/800/600", category: "portraits", caption: "Golden hour portrait session" },
-  { id: 2, src: "https://picsum.photos/seed/2/800/600", category: "landscapes", caption: "Mountain sunrise vista" },
-  { id: 3, src: "https://picsum.photos/seed/3/800/600", category: "urban", caption: "City lights at dusk" },
-  { id: 4, src: "https://picsum.photos/seed/4/800/600", category: "abstract", caption: "Light and shadow play" },
-  { id: 5, src: "https://picsum.photos/seed/5/800/600", category: "portraits", caption: "Candid street moment" },
-  { id: 6, src: "https://picsum.photos/seed/6/800/600", category: "landscapes", caption: "Ocean horizon at sunset" },
-  { id: 7, src: "https://picsum.photos/seed/7/800/600", category: "urban", caption: "Architectural geometry" },
-  { id: 8, src: "https://picsum.photos/seed/8/800/600", category: "abstract", caption: "Reflections in motion" },
-];
+const galleryImages = (() => {
+  const categories = ["canada", "china", "italy", "korea"];
+  return categories.flatMap(category =>
+    Array.from({ length: 10 }, (_, i) => ({
+      id: `${category}-${i + 1}`,
+      src: `PFP/${category.toUpperCase()}/${i + 1}.jpg`,
+      thumb: `PFP/Thumbnails/${category.toUpperCase()}/${i + 1}.jpg`,
+      category: category,
+      sortOrder: i + 1,
+      caption: `${category.charAt(0).toUpperCase() + category.slice(1)} - Photo ${i + 1}`
+    }))
+  );
+})();
 
 const projects = [
   { id: 1, title: "TEDx", desc: "Founded and led the school’s TEDx chapter at Shanghai American School Pudong, managing a 6-member team. Directed event logistics, speaker curation, and marketing to secure funding and approvals. Currently working as a finance intern at TedX University of Toronto.", tech: ["Leadership", "Event Planning", "Marketing", "Logistics"], thumb: "Projects/TedX.JPG" },
@@ -425,7 +428,7 @@ export function Component() {
         <div className="overlay-content" ref={overlayRef}>
           <button className="close-btn" onClick={closeExpandedView}>✕ Close Gallery</button>
           <div className="gallery-filters animate-item">
-            {["all", "portraits", "landscapes", "urban", "abstract"].map(cat => (
+            {["all", "canada", "china", "italy", "korea"].map(cat => (
               <button
                 key={cat}
                 className={`filter-btn ${galleryFilter === cat ? 'active' : ''}`}
@@ -442,7 +445,7 @@ export function Component() {
                 className="gallery-item animate-item"
                 onClick={() => setLightboxImage(img.src)}
               >
-                <img src={img.src} alt={img.caption} loading="lazy" />
+                <img src={img.thumb} alt={img.caption} loading="lazy" />
                 <div className="gallery-caption">{img.caption}</div>
               </div>
             ))}
