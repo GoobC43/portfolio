@@ -563,13 +563,36 @@
         // OPTIMIZATION: Start loading ALL gallery thumbnails immediately for faster aspect ratio caching
         // Use a small delay to not compete with critical resources, but don't wait for idle
         setTimeout(() => {
+          let galleryLoaded = 0;
+          const totalGalleryImages = shuffledGalleryImages.length;
+
+          const onGalleryComplete = () => {
+            // After ALL gallery images are cached, preload project images and about_pic
+            projects.forEach(project => {
+              const img = new Image();
+              img.src = project.thumb;
+            });
+            // Preload about_pic
+            const aboutImg = new Image();
+            aboutImg.src = 'about_pic.jpg';
+          };
+
           shuffledGalleryImages.forEach(img => {
             if (!(img.id in aspectRatioCache)) {
               const image = new Image();
               image.src = img.thumb;
               image.onload = () => {
                 aspectRatioCache[img.id] = image.naturalWidth / image.naturalHeight;
+                galleryLoaded++;
+                if (galleryLoaded === totalGalleryImages) onGalleryComplete();
               };
+              image.onerror = () => {
+                galleryLoaded++;
+                if (galleryLoaded === totalGalleryImages) onGalleryComplete();
+              };
+            } else {
+              galleryLoaded++;
+              if (galleryLoaded === totalGalleryImages) onGalleryComplete();
             }
           });
         }, 500); // Start after 500ms - enough time for critical resources to begin loading
